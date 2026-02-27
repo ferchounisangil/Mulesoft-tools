@@ -1,6 +1,6 @@
-# 🛠️ Mulesoft Tools — Suratech
+# 🛠️ MuleSoft Tools
 
-Colección de herramientas web para el equipo de desarrollo MuleSoft de **Suratech Insurtech**.
+Colección de herramientas web para desarrollo MuleSoft.
 No requieren instalación ni dependencias — corren directo en el navegador.
 
 ---
@@ -61,9 +61,3 @@ open json-diff.html
 ```
 
 No requiere servidor, Node.js ni ninguna dependencia externa.
-
----
-
-## 👤 Autor
-
-Equipo MuleSoft — **Suratech Insurtech / Tecnología**
