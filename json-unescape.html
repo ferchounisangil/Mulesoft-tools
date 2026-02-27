@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Unescape — Suratech</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #4f8ef7;
+      --accent-hover: #3a7ae0;
+      --success: #3ecf8e;
+      --error: #f56565;
+      --warning: #f6ad55;
+      --text: #e2e8f0;
+      --text-muted: #8892a4;
+      --radius: 10px;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1100px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    header span {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    .workspace {
+      width: 100%;
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .workspace { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 12px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .badge-input  { background: #2a2f4a; color: var(--warning); }
+    .badge-output { background: #1a3a2a; color: var(--success); }
+
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: none;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.6;
+      padding: 16px;
+      min-height: 420px;
+    }
+
+    textarea::placeholder { color: var(--text-muted); }
+
+    textarea:focus { background: rgba(79,142,247,0.03); }
+
+    .output-area {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.6;
+      padding: 16px;
+      min-height: 420px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--text);
+    }
+
+    .output-area.empty { color: var(--text-muted); font-style: italic; }
+    .output-area.has-error { color: var(--error); }
+
+    /* Syntax highlighting */
+    .json-key    { color: #79b8ff; }
+    .json-str    { color: #9ecbff; }
+    .json-num    { color: #f8c555; }
+    .json-bool   { color: #f97583; }
+    .json-null   { color: #f97583; }
+    .json-punct  { color: var(--text-muted); }
+
+    .actions {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 22px;
+      transition: all .15s ease;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--error);
+      border: 1px solid var(--error);
+    }
+    .btn-danger:hover { background: rgba(245,101,101,0.1); }
+
+    .status {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+    .status-dot.ok      { background: var(--success); }
+    .status-dot.err     { background: var(--error); }
+    .status-dot.waiting { background: var(--warning); }
+
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: all .25s ease;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.ok  { border-color: var(--success); color: var(--success); }
+    .toast.err { border-color: var(--error);   color: var(--error); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚡</div>
+  <div>
+    <h1>JSON Unescape <span>— Suratech MuleSoft Tools</span></h1>
+  </div>
+</header>
+
+<div class="actions">
+  <button class="btn-primary" onclick="convertir()">
+    ⚙️ Convertir a JSON
+  </button>
+  <button class="btn-secondary" onclick="copiar()">
+    📋 Copiar resultado
+  </button>
+  <button class="btn-secondary" onclick="descargar()">
+    💾 Descargar .json
+  </button>
+  <button class="btn-danger" onclick="limpiar()">
+    🗑 Limpiar todo
+  </button>
+  <div class="status" id="status">
+    <div class="status-dot waiting" id="status-dot"></div>
+    <span id="status-text">Esperando entrada…</span>
+  </div>
+</div>
+
+<br/>
+
+<div class="workspace">
+  <!-- INPUT -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Entrada</span>
+      <span class="badge badge-input">JSON escapado / string</span>
+    </div>
+    <textarea id="input"
+      placeholder='Pega aquí el JSON escapado, por ejemplo:&#10;{\"codProducto\":\"ARRENDAMIENTODIGITAL\",\"esFinanciado\":\"true\",...}'
+      oninput="onInput()"
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Resultado</span>
+      <span class="badge badge-output">JSON formateado</span>
+    </div>
+    <div class="output-area empty" id="output">
+      El JSON formateado aparecerá aquí…
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let jsonResultado = null;
+
+  function setStatus(tipo, texto) {
+    const dot  = document.getElementById('status-dot');
+    const span = document.getElementById('status-text');
+    dot.className  = 'status-dot ' + tipo;
+    span.textContent = texto;
+  }
+
+  function onInput() {
+    const val = document.getElementById('input').value.trim();
+    if (!val) setStatus('waiting', 'Esperando entrada…');
+    else      setStatus('waiting', 'Listo para convertir');
+  }
+
+  function convertir() {
+    const raw    = document.getElementById('input').value.trim();
+    const output = document.getElementById('output');
+
+    if (!raw) {
+      mostrarToast('⚠️ Pega algo en el campo de entrada', 'err');
+      return;
+    }
+
+    let parsed;
+
+    // Estrategia 1: intentar parsear directamente (ya es JSON válido)
+    try {
+      parsed = JSON.parse(raw);
+    } catch (_) {
+      // Estrategia 2: reemplazar \" por " y probar de nuevo
+      try {
+        const unescaped = raw
+          .replace(/\\"/g, '"')   // \" → "
+          .replace(/\\\\/g, '\\') // \\ → \
+          .replace(/\\n/g, '\n')  // \n → salto de línea
+          .replace(/\\r/g, '')    // \r → nada
+          .replace(/\\t/g, '\t'); // \t → tab
+        parsed = JSON.parse(unescaped);
+      } catch (_2) {
+        // Estrategia 3: el string puede estar envuelto en comillas externas
+        try {
+          const inner = JSON.parse('"' + raw.replace(/^"|"$/g, '') + '"');
+          parsed = JSON.parse(inner);
+        } catch (e) {
+          output.className   = 'output-area has-error';
+          output.textContent = '❌ No se pudo convertir:\n\n' + e.message +
+            '\n\nVerifica que el texto sea un JSON escapado válido.';
+          jsonResultado = null;
+          setStatus('err', 'Error al convertir');
+          return;
+        }
+      }
+    }
+
+    jsonResultado  = JSON.stringify(parsed, null, 2);
+    output.className = 'output-area';
+    output.innerHTML = highlight(jsonResultado);
+    setStatus('ok', '✓ JSON válido — ' + contarCampos(parsed) + ' campos en raíz');
+    mostrarToast('✅ Conversión exitosa', 'ok');
+  }
+
+  function highlight(json) {
+    return json
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(
+        /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+        function(match) {
+          if (/^"/.test(match)) {
+            if (/:$/.test(match)) return '<span class="json-key">' + match + '</span>';
+            return '<span class="json-str">' + match + '</span>';
+          }
+          if (/true|false/.test(match)) return '<span class="json-bool">' + match + '</span>';
+          if (/null/.test(match))       return '<span class="json-null">' + match + '</span>';
+          return '<span class="json-num">' + match + '</span>';
+        }
+      );
+  }
+
+  function contarCampos(obj) {
+    if (obj && typeof obj === 'object' && !Array.isArray(obj))
+      return Object.keys(obj).length;
+    return '?';
+  }
+
+  function copiar() {
+    if (!jsonResultado) { mostrarToast('⚠️ Primero convierte el JSON', 'err'); return; }
+    navigator.clipboard.writeText(jsonResultado)
+      .then(() => mostrarToast('📋 Copiado al portapapeles', 'ok'))
+      .catch(() => mostrarToast('❌ No se pudo copiar', 'err'));
+  }
+
+  function descargar() {
+    if (!jsonResultado) { mostrarToast('⚠️ Primero convierte el JSON', 'err'); return; }
+    const blob = new Blob([jsonResultado], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'resultado.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    mostrarToast('💾 Descargando resultado.json', 'ok');
+  }
+
+  function limpiar() {
+    document.getElementById('input').value = '';
+    const output = document.getElementById('output');
+    output.className   = 'output-area empty';
+    output.textContent = 'El JSON formateado aparecerá aquí…';
+    jsonResultado = null;
+    setStatus('waiting', 'Esperando entrada…');
+  }
+
+  function mostrarToast(msg, tipo) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = 'toast ' + tipo + ' show';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.className = 'toast'; }, 2800);
+  }
+
+  // Atajo de teclado: Ctrl+Enter para convertir
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') convertir();
+  });
+</script>
+</body>
+</html>
